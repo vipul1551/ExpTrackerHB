@@ -29,7 +29,7 @@ public class RoleSeed {
 			System.out.println("Role Added.....");
 
 		} else {
-			System.out.println("Roled Already Added....");
+			System.out.println("Roles Already Added....");
 		}
 	}
 }

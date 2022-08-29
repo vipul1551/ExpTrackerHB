@@ -6,8 +6,7 @@ import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -21,7 +20,6 @@ import com.repository.RoleRepository;
 import com.repository.UserRepository;
 import com.service.TokenService;
 
-@CrossOrigin
 @RestController
 @RequestMapping("/public")
 public class SessionController {
@@ -35,6 +33,9 @@ public class SessionController {
 	@Autowired
 	TokenService tokenService;
 	
+	@Autowired
+	BCryptPasswordEncoder bCrypt; // BCrypt Password encoder for encrypting password
+	
 	@PostMapping("/signup")
 	public ResponseEntity<ResponseBean<UserBean>> signup(@RequestBody UserBean user){
 		
@@ -45,6 +46,11 @@ public class SessionController {
 			
 			RoleBean role = roleRepo.findByRoleName("user");
 			user.setRole(role);
+			
+			// BCrypt Password encoder for encrypting password
+			String encPassword = bCrypt.encode(user.getPassword());
+			user.setPassword(encPassword);
+			
 			userRepo.save(user);
 			res.setData(user);
 			res.setMsg("Signup Done.......");
@@ -60,8 +66,8 @@ public class SessionController {
 	@PostMapping("/login")
 	public ResponseEntity<?> authenticate(@RequestBody LoginBean login){
 		UserBean dbUser = userRepo.findByEmail(login.getEmail());
-		
-		if(dbUser == null || login.getPassword().matches(dbUser.getPassword()) == false) {
+				
+		if(dbUser == null || bCrypt.matches(login.getPassword(), dbUser.getPassword()) == false) {
 			ResponseBean<LoginBean> res = new ResponseBean<>();
 			res.setData(login);
 			res.setMsg("Invalid Credentials");
